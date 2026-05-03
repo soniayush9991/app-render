@@ -1,7 +1,9 @@
 import joblib
 import numpy as np
+from pathlib import Path
 
-model = joblib.load("model (1).pkl")
+MODEL_PATH = Path(__file__).resolve().parent.parent / "model.pkl"
+model = joblib.load(MODEL_PATH)
 
 def predict_root_cause(data):
     features = np.array([[

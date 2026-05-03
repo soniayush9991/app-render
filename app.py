@@ -1,7 +1,15 @@
 from src.logger import log_event, load_logs
 import streamlit as st
 from src.model import predict_root_cause
-from src.decision import decide_action, calculate_severity, generate_summary
+from src.simulator import simulate_system
+from src.decision import (
+    decide_action,
+    calculate_severity,
+    generate_summary,
+    generate_alert,
+    generate_explanation,
+    calculate_health_score
+)
 
 st.set_page_config(page_title="ARP Dashboard", layout="wide")
 
@@ -10,9 +18,16 @@ st.title("🚀 Autonomous Reliability Platform")
 # Load logs at the beginning of the script
 logs = load_logs()
 
-# Ensure logs is not None or empty before proceeding
 if logs is None or logs.empty:
-    st.warning("No logs available. Please check the log source.")
+    st.warning("No logs available. Future predictions will be saved once analysis runs.")
+else:
+    st.sidebar.subheader("Recent logs")
+    st.sidebar.dataframe(logs.tail(10))
+
+api_choice = st.selectbox(
+    "Select API Service",
+    ["Payment API", "Auth API", "Database API"]
+)
 
 # Layout (columns)
 col1, col2, col3 = st.columns(3)
@@ -27,43 +42,58 @@ with col3:
     memory = st.slider("Memory (MB)", 0, 2000, 500)
 
 if st.button("Analyze System"):
-
-    st.write("Button clicked ✅")  # DEBUG LINE
-
     try:
+        system_data = simulate_system()
+        api_data = system_data[api_choice]
 
-        data = {
+        api_data["latency_ms"] = latency
+        api_data["cpu"] = cpu
+        api_data["memory"] = memory
+        system_data[api_choice] = api_data
 
-            "latency_ms": latency,
-
-            "cpu": cpu,
-
-            "memory": memory,
-
-            "retry": 2,
-
-            "error_rate": 0.1,
-
-            "avg_latency": 800
-
-        }
-
-        st.write("Input data:", data)
-
-        root_cause, confidence = predict_root_cause(data)
-
-        st.write("Prediction done")
-
+        # Core logic
+        root_cause, confidence = predict_root_cause(api_data)
         action = decide_action(root_cause)
-
-        severity = calculate_severity(data)
-
+        severity = calculate_severity(api_data)
         summary = generate_summary(root_cause, action, severity)
 
-        st.success(f"Root Cause: {root_cause}")
+        # New features
+        alert = generate_alert(severity, root_cause)
+        explanation = generate_explanation(api_data, root_cause)
+        health_score = calculate_health_score(api_data)
 
-        st.info(f"Action: {action}")
+        log_event(api_data, root_cause, action, severity, confidence)
+
+        # ===== UI OUTPUT =====
+        st.subheader("📡 Simulated API Signals")
+        st.json(api_data)
+
+        st.subheader("📊 Analysis Results")
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Root Cause", root_cause)
+        col2.metric("Confidence", f"{confidence * 100:.2f}%")
+        col3.metric("Severity", severity)
+
+        st.metric("API Selected", api_choice)
+        st.write(summary)
+
+        st.subheader("📡 System State")
+        for api, signals in system_data.items():
+            st.write(f"### {api}")
+            st.json(signals)
+
+        st.subheader("🛠 Recommended Action")
+        st.success(action)
+
+        st.subheader("🚨 Alert System")
+        st.error(alert)
+
+        st.subheader("🧠 AI Explanation")
+        st.write(explanation)
+
+        st.subheader("💚 System Health Score")
+        st.metric("Health Score", f"{health_score}/100")
 
     except Exception as e:
-
-        st.error(f"Error: {e}")
+        st.error(f"🚨 Error: {e}")
