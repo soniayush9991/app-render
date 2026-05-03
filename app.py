@@ -2,6 +2,8 @@ from src.logger import log_event, load_logs
 import streamlit as st
 from src.model import predict_root_cause
 from src.simulator import simulate_system
+from src.cascade import detect_cascade, generate_cascade_text
+from src.graph import build_graph, draw_graph
 from src.decision import (
     decide_action,
     calculate_severity,
@@ -51,6 +53,11 @@ if st.button("Analyze System"):
         api_data["memory"] = memory
         system_data[api_choice] = api_data
 
+        graph = build_graph(system_data)
+        fig = draw_graph(graph, system_data)
+        cascade_chain = detect_cascade(system_data)
+        cascade_text = generate_cascade_text(cascade_chain)
+
         # Core logic
         root_cause, confidence = predict_root_cause(api_data)
         action = decide_action(root_cause)
@@ -82,6 +89,12 @@ if st.button("Analyze System"):
         for api, signals in system_data.items():
             st.write(f"### {api}")
             st.json(signals)
+
+        st.subheader("🔗 Cascading Failure Analysis")
+        st.warning(cascade_text)
+
+        st.subheader("🕸 System Dependency Graph")
+        st.pyplot(fig)
 
         st.subheader("🛠 Recommended Action")
         st.success(action)
