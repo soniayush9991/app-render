@@ -9,3 +9,9 @@ latency,cpu,memory,root_cause,action,severity,confidence
 1000,50,500,High latency in network,No Action,LOW,0.07
 1000,50,500,High latency in network,No Action,LOW,0.07
 1000,50,500,Memory exhaustion,No Action,LOW,0.07
+1000,50,500,Memory exhaustion,No Action,LOW,0.07
+1000,50,500,High latency in network,No Action,LOW,0.07
+1000,50,500,Misconfigured environment variables,No Action,LOW,0.07
+1000,50,500,Misconfigured environment variables,No Action,LOW,0.07
+1000,50,500,High latency in network,No Action,LOW,0.07
+1000,50,500,Misconfigured environment variables,No Action,LOW,0.07
