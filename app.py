@@ -28,14 +28,42 @@ with col3:
 
 if st.button("Analyze System"):
 
-    data = {
-        "latency_ms": latency,
-        "cpu": cpu,
-        "memory": memory,
-        "retry": 2,
-        "error_rate": 0.1,
-        "avg_latency": 800
-    }
+    st.write("Button clicked ✅")  # DEBUG LINE
 
-    root_cause, confidence = predict_root_cause(data)
-    action = decide_action(root_cause)
+    try:
+
+        data = {
+
+            "latency_ms": latency,
+
+            "cpu": cpu,
+
+            "memory": memory,
+
+            "retry": 2,
+
+            "error_rate": 0.1,
+
+            "avg_latency": 800
+
+        }
+
+        st.write("Input data:", data)
+
+        root_cause, confidence = predict_root_cause(data)
+
+        st.write("Prediction done")
+
+        action = decide_action(root_cause)
+
+        severity = calculate_severity(data)
+
+        summary = generate_summary(root_cause, action, severity)
+
+        st.success(f"Root Cause: {root_cause}")
+
+        st.info(f"Action: {action}")
+
+    except Exception as e:
+
+        st.error(f"Error: {e}")
