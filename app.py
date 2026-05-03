@@ -1,6 +1,6 @@
 from src.logger import log_event, load_logs
 import streamlit as st
-from src.model import predict_root_cause
+from src.model import predict_root_cause, retrain_model
 from src.simulator import simulate_system
 from src.cascade import detect_cascade, generate_cascade_text
 from src.graph import build_graph, draw_graph
@@ -10,7 +10,8 @@ from src.decision import (
     generate_summary,
     generate_alert,
     generate_explanation,
-    calculate_health_score
+    calculate_health_score,
+    simulate_action_outcome
 )
 
 st.set_page_config(page_title="ARP Dashboard", layout="wide")
@@ -25,6 +26,12 @@ if logs is None or logs.empty:
 else:
     st.sidebar.subheader("Recent logs")
     st.sidebar.dataframe(logs.tail(10))
+
+if st.sidebar.button("Retrain Model"):
+    if retrain_model(logs):
+        st.sidebar.success("Model retrained successfully!")
+    else:
+        st.sidebar.warning("Not enough data to retrain.")
 
 api_choice = st.selectbox(
     "Select API Service",
@@ -69,7 +76,16 @@ if st.button("Analyze System"):
         explanation = generate_explanation(api_data, root_cause)
         health_score = calculate_health_score(api_data)
 
+        # Simulate self-healing
+        healed_data = simulate_action_outcome(api_data, action)
+        healed_health_score = calculate_health_score(healed_data)
+
         log_event(api_data, root_cause, action, severity, confidence)
+
+        # Retrain model if enough data
+        if len(logs) >= 10 and (len(logs) % 5 == 0):  # Retrain every 5 new logs
+            if retrain_model(logs):
+                st.info("🤖 Model retrained with recent data!")
 
         # ===== UI OUTPUT =====
         st.subheader("📡 Simulated API Signals")
@@ -107,6 +123,12 @@ if st.button("Analyze System"):
 
         st.subheader("💚 System Health Score")
         st.metric("Health Score", f"{health_score}/100")
+
+        st.subheader("🔧 Simulated Healing")
+        st.write(f"After applying '{action}':")
+        st.metric("Healed Latency", f"{healed_data['latency_ms']} ms")
+        st.metric("Healed CPU", f"{healed_data['cpu']}%")
+        st.metric("Healed Health Score", f"{healed_health_score}/100")
 
     except Exception as e:
         st.error(f"🚨 Error: {e}")

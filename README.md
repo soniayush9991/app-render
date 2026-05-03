@@ -11,8 +11,8 @@ This app simulates the health of three API services and uses a pre-trained model
 - Predict root cause and confidence using a saved ML model
 - Calculate severity and health score for selected API data
 - Generate incident summaries, alerts, and explanations
-- Persist analyzed events to `logs.csv`
-
+- Persist analyzed events to `logs.csv`- **Self-learning**: Automatically retrain the model with logged data every 5 analyses
+- **Self-healing**: Simulate action outcomes and show improved system state
 ## Repository Structure
 
 - `app.py` - Streamlit frontend and main application workflow
@@ -52,6 +52,13 @@ streamlit run app.py
 3. Adjust the sliders for latency, CPU usage, and memory usage.
 4. Click **Analyze System** to run the simulation and inspection.
 5. Review predictive results, recommended actions, alerts, and the system health score.
+6. View simulated healing outcomes after actions.
+7. Use the sidebar **Retrain Model** button to manually update the model with logged data.
+
+## Learning and Self-Healing
+
+- **Learning**: The app logs each analysis and retrains the ML model every 5 new entries using historical data.
+- **Self-Healing**: After analysis, the app simulates applying the recommended action and shows the "healed" system state, including improved metrics and health score.
 
 ## Notes
 

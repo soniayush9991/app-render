@@ -52,3 +52,12 @@ def calculate_health_score(data):
         score -= 20
 
     return max(score, 0)
+
+def simulate_action_outcome(data, action):
+    # Simulate if the action improves the system
+    if action == "Scale Database" and data["latency_ms"] > 3000:
+        return {**data, "latency_ms": data["latency_ms"] * 0.7, "cpu": data["cpu"] * 0.8}
+    elif action == "Refresh Token" and data["cpu"] > 80:
+        return {**data, "cpu": data["cpu"] * 0.9}
+    # Add more simulations as needed
+    return data  # No change
